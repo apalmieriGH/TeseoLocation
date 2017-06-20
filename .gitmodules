@@ -1,0 +1,6 @@
+[submodule "GPSProvider"]
+	path = GPSProvider
+	url = ssh://gitolite@codex.cro.st.com/x-nucleodev/mbed/mbedClassic/GPSProvider.git
+[submodule "X_NUCLEO_GNSS1A1"]
+	path = X_NUCLEO_GNSS1A1
+	url = ssh://gitolite@codex.cro.st.com/x-nucleodev/mbed/mbedClassic/X_NUCLEO_GNSS1A1.git
