@@ -79,7 +79,8 @@ static eGeofenceId geofenceId;
 Serial serialDebug(DEBUG_TX_PIN, DEBUG_RX_PIN);
 #define TESEO_APP_LOG_INFO(...)   serialDebug.printf(__VA_ARGS__)
 
-#define WARNING_MSG TESEO_APP_LOG_INFO("GNSS is not running. Please, type 'start' to make it runnable.\r\n");
+#define WARNING_NOT_RUN_MSG TESEO_APP_LOG_INFO("GNSS is not running. Please, type 'start' to make it runnable.\r\n");
+#define WARNING_ALREADY_RUN_MSG TESEO_APP_LOG_INFO("GNSS is already running.\r\n");
 
 static GPSProvider gnss;
 static bool gnssRunning = false;
@@ -142,22 +143,28 @@ _ExecAppCmd(void)
       sAppCmd = APP_CMD_IDLE;
       _AppShowCmd();
       break;
-      /*
+
     case APP_CMD_IDLE:
-      //TESEO_APP_LOG_INFO("calling gnss.process()\r\n");
-      gnss.process();
+      if(gnssRunning) {
+        //TESEO_APP_LOG_INFO("process.\r\n");
+        gnss.process();
+      }
       break;
-      */
+
     case APP_CMD_START:
       sAppCmd = APP_CMD_IDLE;
-      TESEO_APP_LOG_INFO("start gnss.\r\n");
-      gnss.start();
-      gnssRunning = true;
+      if(gnssRunning) {
+        WARNING_ALREADY_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("start gnss.\r\n");
+        gnss.start();
+        gnssRunning = true;
+      }
       break;
     case APP_CMD_STOP:
       sAppCmd = APP_CMD_IDLE;
       if(!gnssRunning) {
-        WARNING_MSG;
+        WARNING_NOT_RUN_MSG;
       } else {
         TESEO_APP_LOG_INFO("stop gnss.\r\n");
         gnss.stop();
@@ -167,7 +174,7 @@ _ExecAppCmd(void)
     case APP_CMD_RESET:
       sAppCmd = APP_CMD_IDLE;
       if(!gnssRunning) {
-        WARNING_MSG;
+        WARNING_NOT_RUN_MSG;
       } else {
         TESEO_APP_LOG_INFO("reset on.\r\n");
         gnss.reset();
@@ -176,7 +183,7 @@ _ExecAppCmd(void)
     case APP_CMD_GETLASTLOC:
       sAppCmd = APP_CMD_IDLE;
       if(!gnssRunning) {
-        WARNING_MSG;
+        WARNING_NOT_RUN_MSG;
       } else {
         TESEO_APP_LOG_INFO("get last loc.\r\n");
         _AppShowLastPosition(gnss.getLastLocation());
@@ -185,7 +192,7 @@ _ExecAppCmd(void)
     case APP_CMD_CONFGEOFENCE:
       sAppCmd = APP_CMD_IDLE;
       if(!gnssRunning) {
-        WARNING_MSG;
+        WARNING_NOT_RUN_MSG;
       } else {
         TESEO_APP_LOG_INFO("config geofence.\r\n");
         _AppGeofenceCfg(gnss.isGeofencingSupported());
@@ -194,7 +201,7 @@ _ExecAppCmd(void)
     case APP_CMD_GEOFENCEREQ:
       sAppCmd = APP_CMD_IDLE;
       if(!gnssRunning) {
-        WARNING_MSG;
+        WARNING_NOT_RUN_MSG;
       } else {
         TESEO_APP_LOG_INFO("request geofence status.\r\n");
         gnss.geofenceReq();
@@ -203,7 +210,7 @@ _ExecAppCmd(void)
     case APP_CMD_VERBOSE:
       sAppCmd = APP_CMD_IDLE;
       if(!gnssRunning) {
-        WARNING_MSG;
+        WARNING_NOT_RUN_MSG;
       } else {
         TESEO_APP_LOG_INFO("set verbose mode.\r\n");
         gnss.setVerboseMode(level);
@@ -212,7 +219,7 @@ _ExecAppCmd(void)
     case APP_CMD_GET_DEVICE_INFO:
       sAppCmd = APP_CMD_IDLE;
       if(!gnssRunning) {
-        WARNING_MSG;
+        WARNING_NOT_RUN_MSG;
       } else {
         TESEO_APP_LOG_INFO("get device info.\r\n");
         if(gnss.haveDeviceInfo()) {
@@ -334,6 +341,7 @@ _AppShowCmd(void)
     TESEO_APP_LOG_INFO("    cg-c         - config Geofence [c=l Lecce, c=t Catania]\r\n");
     TESEO_APP_LOG_INFO("    rg           - request Geofence status\r\n");
     TESEO_APP_LOG_INFO("    verbose-l    - nmea msg verbose mode [l=1 normal, l=2 debug]\r\n");
+    TESEO_APP_LOG_INFO("    reset        - reset GNSS\r\n");
     TESEO_APP_LOG_INFO("    getdevinfo   - get device info\r\n");
 }
 
