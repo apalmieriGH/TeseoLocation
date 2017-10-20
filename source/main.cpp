@@ -58,8 +58,12 @@ typedef enum AppCmd {
     APP_CMD_START,          // Start location
     APP_CMD_STOP,           // Stop location
     APP_CMD_GETLASTLOC,     // Get last location
+    APP_CMD_ENGEOFENCE,     // Enable Geofence
     APP_CMD_CONFGEOFENCE,   // Config Geofence
     APP_CMD_GEOFENCEREQ,    // Request Geofence status
+    APP_CMD_ENODO,          // Enable Odometer
+    APP_CMD_STARTODO,       // Start Odometer system
+    APP_CMD_STOPODO,       // Stop Odometer system
     APP_CMD_VERBOSE,        // Enable verbose mode
     APP_CMD_RESET,          // Debug command, pull reset pin high level
     APP_CMD_GET_DEVICE_INFO // Get Device Info
@@ -69,7 +73,9 @@ static void _AppShowCmd(void);
 static void _ConsoleRxHandler(void);
 static void _AppCmdProcess(char *pCmd);
 static void _AppShowLastPosition(const GPSProvider::LocationUpdateParams_t *lastLoc);
+static void _AppEnGeofence(const bool isGeofenceSupported);
 static void _AppGeofenceCfg(const bool isGeofenceSupported);
+static void _AppEnOdometer(const bool isOdometerSupported);
 
 static void _ExecAppCmd(void);
 
@@ -189,6 +195,15 @@ _ExecAppCmd(void)
         _AppShowLastPosition(gnss.getLastLocation());
       }
       break;
+    case APP_CMD_ENGEOFENCE:
+      sAppCmd = APP_CMD_IDLE;
+      if(!gnssRunning) {
+        WARNING_NOT_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("enable geofence.\r\n");
+        _AppEnGeofence(gnss.isGeofencingSupported());
+      }
+      break;
     case APP_CMD_CONFGEOFENCE:
       sAppCmd = APP_CMD_IDLE;
       if(!gnssRunning) {
@@ -205,6 +220,33 @@ _ExecAppCmd(void)
       } else {
         TESEO_APP_LOG_INFO("request geofence status.\r\n");
         gnss.geofenceReq();
+      }
+      break;
+    case APP_CMD_ENODO:
+      sAppCmd = APP_CMD_IDLE;
+      if(!gnssRunning) {
+        WARNING_NOT_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("enable odometer.\r\n");
+        _AppEnOdometer(gnss.isOdometerSupported());
+      }
+      break;
+    case APP_CMD_STARTODO:
+      sAppCmd = APP_CMD_IDLE;
+      if(!gnssRunning) {
+        WARNING_NOT_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("start odo subystem.\r\n");
+        gnss.startOdo(1);
+      }
+      break;
+    case APP_CMD_STOPODO:
+      sAppCmd = APP_CMD_IDLE;
+      if(!gnssRunning) {
+        WARNING_NOT_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("stop odo subystem.\r\n");
+        gnss.stopOdo();
       }
       break;
     case APP_CMD_VERBOSE:
@@ -293,6 +335,20 @@ _AppShowLastPosition(const GPSProvider::LocationUpdateParams_t *lastLoc)
 }
 
 static void
+_AppEnGeofence(const bool isGeofenceSupported)
+{
+  if(isGeofenceSupported) {
+    gps_provider_error_t ret = gnss.enableGeofence();
+    if(ret == GPS_ERROR_NONE) {
+      TESEO_APP_LOG_INFO("Enabling Geofencing subsystem...\n\r");
+    }
+  } else {
+    TESEO_APP_LOG_INFO("Geofencing is not supported!\n\r");
+  }
+
+}
+
+static void
 _AppGeofenceCfg(const bool isGeofenceSupported)
 {
   GPSGeofence gf;
@@ -331,15 +387,33 @@ _AppGeofenceCfg(const bool isGeofenceSupported)
 }
 
 static void
+_AppEnOdometer(const bool isOdometerSupported)
+{
+  if(isOdometerSupported) {
+    gps_provider_error_t ret = gnss.enableOdo();
+    if(ret == GPS_ERROR_NONE) {
+      TESEO_APP_LOG_INFO("Enabling Odometer subsystem...\n\r");
+    }
+  } else {
+    TESEO_APP_LOG_INFO("Odometer is not supported!\n\r");
+  }
+
+}
+
+static void
 _AppShowCmd(void)
 {
     TESEO_APP_LOG_INFO("Location commands:\r\n");
     TESEO_APP_LOG_INFO("    help         - help to show supported commands\r\n");
-    TESEO_APP_LOG_INFO("    start        - begin location\r\n");
-    TESEO_APP_LOG_INFO("    stop         - end location\r\n");
+    TESEO_APP_LOG_INFO("    start        - begin location app\r\n");
+    TESEO_APP_LOG_INFO("    stop         - end location app\r\n");
     TESEO_APP_LOG_INFO("    getlastloc   - get last location\r\n");
-    TESEO_APP_LOG_INFO("    cg-c         - config Geofence [c=l Lecce, c=t Catania]\r\n");
-    TESEO_APP_LOG_INFO("    rg           - request Geofence status\r\n");
+    TESEO_APP_LOG_INFO("    en-geo       - enable Geofence\r\n");
+    TESEO_APP_LOG_INFO("    geo-c        - config Geofence [c=l Lecce, c=t Catania]\r\n");
+    TESEO_APP_LOG_INFO("    req-geo      - request Geofence status\r\n");
+    TESEO_APP_LOG_INFO("    en-odo       - enable Odoemter\r\n");
+    TESEO_APP_LOG_INFO("    start-odo    - start Ododmeter [demo distance 1m]\r\n");
+    TESEO_APP_LOG_INFO("    stop-odo     - stop Ododmeter\r\n");
     TESEO_APP_LOG_INFO("    verbose-l    - nmea msg verbose mode [l=1 normal, l=2 debug]\r\n");
     TESEO_APP_LOG_INFO("    reset        - reset GNSS\r\n");
     TESEO_APP_LOG_INFO("    getdevinfo   - get device info\r\n");
@@ -356,6 +430,8 @@ _AppCmdProcess(char *pCmd)
         sAppCmd = APP_CMD_STOP;
     } else if (strcmp(pCmd, "getlastloc") == 0) {
         sAppCmd = APP_CMD_GETLASTLOC;
+    } else if (strcmp(pCmd, "en-geo") == 0) {
+        sAppCmd = APP_CMD_ENGEOFENCE;
     } else if (strcmp(pCmd, "cg-l") == 0) {
         geofenceId = LecceId;
         sAppCmd = APP_CMD_CONFGEOFENCE;
@@ -364,6 +440,12 @@ _AppCmdProcess(char *pCmd)
         sAppCmd = APP_CMD_CONFGEOFENCE;
     } else if (strcmp(pCmd, "rg") == 0) {
         sAppCmd = APP_CMD_GEOFENCEREQ;
+    } else if (strcmp(pCmd, "en-odo") == 0) {
+        sAppCmd = APP_CMD_ENODO;
+    } else if (strcmp(pCmd, "start-odo") == 0) {
+        sAppCmd = APP_CMD_STARTODO;
+    } else if (strcmp(pCmd, "stop-odo") == 0) {
+        sAppCmd = APP_CMD_STOPODO;
     } else if (strcmp(pCmd, "verbose-1") == 0) {
         level = 1;
         sAppCmd = APP_CMD_VERBOSE;
