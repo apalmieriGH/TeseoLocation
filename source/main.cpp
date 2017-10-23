@@ -63,7 +63,12 @@ typedef enum AppCmd {
     APP_CMD_GEOFENCEREQ,    // Request Geofence status
     APP_CMD_ENODO,          // Enable Odometer
     APP_CMD_STARTODO,       // Start Odometer system
-    APP_CMD_STOPODO,       // Stop Odometer system
+    APP_CMD_STOPODO,        // Stop Odometer system
+    APP_CMD_ENDATALOG,      // Enable Datalog
+    APP_CMD_CONFDATALOG,    // Config Datalog
+    APP_CMD_STARTDATALOG,   // Start Datalog
+    APP_CMD_STOPDATALOG,    // Stop Datalog
+    APP_CMD_ERASEDATALOG,   // Erase Datalog
     APP_CMD_VERBOSE,        // Enable verbose mode
     APP_CMD_RESET,          // Debug command, pull reset pin high level
     APP_CMD_GET_DEVICE_INFO // Get Device Info
@@ -74,8 +79,10 @@ static void _ConsoleRxHandler(void);
 static void _AppCmdProcess(char *pCmd);
 static void _AppShowLastPosition(const GPSProvider::LocationUpdateParams_t *lastLoc);
 static void _AppEnGeofence(const bool isGeofenceSupported);
-static void _AppGeofenceCfg(const bool isGeofenceSupported);
+static void _AppGeofenceCfg(void);
 static void _AppEnOdometer(const bool isOdometerSupported);
+static void _AppEnDatalogging(const bool isDataloggingSupported);
+static void _AppDatalogCfg(void);
 
 static void _ExecAppCmd(void);
 
@@ -210,7 +217,7 @@ _ExecAppCmd(void)
         WARNING_NOT_RUN_MSG;
       } else {
         TESEO_APP_LOG_INFO("config geofence.\r\n");
-        _AppGeofenceCfg(gnss.isGeofencingSupported());
+        _AppGeofenceCfg();
       }
       break;
     case APP_CMD_GEOFENCEREQ:
@@ -247,6 +254,51 @@ _ExecAppCmd(void)
       } else {
         TESEO_APP_LOG_INFO("stop odo subystem.\r\n");
         gnss.stopOdo();
+      }
+      break;
+    case APP_CMD_ENDATALOG:
+      sAppCmd = APP_CMD_IDLE;
+      if(!gnssRunning) {
+        WARNING_NOT_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("enable datalog.\r\n");
+        _AppEnDatalogging(gnss.isDataloggingSupported());
+      }
+      break;
+    case APP_CMD_CONFDATALOG:
+      sAppCmd = APP_CMD_IDLE;
+      if(!gnssRunning) {
+        WARNING_NOT_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("config datalog.\r\n");
+        _AppDatalogCfg();
+      }
+      break;
+    case APP_CMD_STARTDATALOG:
+      sAppCmd = APP_CMD_IDLE;
+      if(!gnssRunning) {
+        WARNING_NOT_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("start datalog.\r\n");
+        gnss.startDatalog();
+      }
+      break;
+    case APP_CMD_STOPDATALOG:
+      sAppCmd = APP_CMD_IDLE;
+      if(!gnssRunning) {
+        WARNING_NOT_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("stop datalog.\r\n");
+        gnss.stopDatalog();
+      }
+      break;
+    case APP_CMD_ERASEDATALOG:
+      sAppCmd = APP_CMD_IDLE;
+      if(!gnssRunning) {
+        WARNING_NOT_RUN_MSG;
+      } else {
+        TESEO_APP_LOG_INFO("erase datalog.\r\n");
+        gnss.eraseDatalog();
       }
       break;
     case APP_CMD_VERBOSE:
@@ -349,7 +401,7 @@ _AppEnGeofence(const bool isGeofenceSupported)
 }
 
 static void
-_AppGeofenceCfg(const bool isGeofenceSupported)
+_AppGeofenceCfg(void)
 {
   GPSGeofence gf;
 
@@ -373,15 +425,11 @@ _AppGeofenceCfg(const bool isGeofenceSupported)
   
   GPSGeofence *geofenceTable[] = {&gf};
 
-  if(isGeofenceSupported) {
-    gnss.onGeofenceCfgMessage(geofenceCfg);
-    gnss.onGeofenceStatusMessage(geofenceStatus);
-    gps_provider_error_t ret = gnss.configGeofences(geofenceTable, sizeof(geofenceTable)/sizeof(GPSGeofence *));
-    if(ret == GPS_ERROR_NONE) {
-      TESEO_APP_LOG_INFO("Configuring Geofence circles...\n\r");
-    }
-  } else {
-    TESEO_APP_LOG_INFO("Geofencing is not supported!\n\r");
+  gnss.onGeofenceCfgMessage(geofenceCfg);
+  gnss.onGeofenceStatusMessage(geofenceStatus);
+  gps_provider_error_t ret = gnss.configGeofences(geofenceTable, sizeof(geofenceTable)/sizeof(GPSGeofence *));
+  if(ret == GPS_ERROR_NONE) {
+    TESEO_APP_LOG_INFO("Configuring Geofence circles...\n\r");
   }
 
 }
@@ -401,6 +449,43 @@ _AppEnOdometer(const bool isOdometerSupported)
 }
 
 static void
+_AppEnDatalogging(const bool isDataloggingSupported)
+{
+  if(isDataloggingSupported) {
+    gps_provider_error_t ret = gnss.enableDatalog();
+    if(ret == GPS_ERROR_NONE) {
+      TESEO_APP_LOG_INFO("Enabling Datalog subsystem...\n\r");
+    }
+  } else {
+    TESEO_APP_LOG_INFO("Datalog is not supported!\n\r");
+  }
+
+}
+
+static void
+_AppDatalogCfg(void)
+{
+  bool          enableBufferFullAlarm = false;
+  bool          enableCircularBuffer = true;
+  unsigned      minRate = 5;
+  unsigned      minSpeed = 0;
+  unsigned      minPosition = 0;
+  int           logMask = 1;
+
+  GPSDatalog dl(enableBufferFullAlarm,
+                enableCircularBuffer,
+                minRate,
+                minSpeed,
+                minPosition,
+                logMask);
+
+  gps_provider_error_t ret = gnss.configDatalog(&dl);
+  if(ret == GPS_ERROR_NONE) {
+    TESEO_APP_LOG_INFO("Configuring Datalog...\n\r");
+  }
+}
+
+static void
 _AppShowCmd(void)
 {
     TESEO_APP_LOG_INFO("Location commands:\r\n");
@@ -414,6 +499,11 @@ _AppShowCmd(void)
     TESEO_APP_LOG_INFO("    en-odo       - enable Odoemter\r\n");
     TESEO_APP_LOG_INFO("    start-odo    - start Ododmeter [demo distance 1m]\r\n");
     TESEO_APP_LOG_INFO("    stop-odo     - stop Ododmeter\r\n");
+    TESEO_APP_LOG_INFO("    en-datalog   - enable Datalog\r\n");
+    TESEO_APP_LOG_INFO("    cfg-dl       - config Datalog\r\n");
+    TESEO_APP_LOG_INFO("    start-dl     - start Datalog\r\n");
+    TESEO_APP_LOG_INFO("    stop-dl      - stop Datalog\r\n");
+    TESEO_APP_LOG_INFO("    erase-dl     - erase Datalog\r\n");
     TESEO_APP_LOG_INFO("    verbose-l    - nmea msg verbose mode [l=1 normal, l=2 debug]\r\n");
     TESEO_APP_LOG_INFO("    reset        - reset GNSS\r\n");
     TESEO_APP_LOG_INFO("    getdevinfo   - get device info\r\n");
@@ -446,6 +536,16 @@ _AppCmdProcess(char *pCmd)
         sAppCmd = APP_CMD_STARTODO;
     } else if (strcmp(pCmd, "stop-odo") == 0) {
         sAppCmd = APP_CMD_STOPODO;
+    } else if (strcmp(pCmd, "en-datalog") == 0) {
+        sAppCmd = APP_CMD_ENDATALOG;
+    } else if (strcmp(pCmd, "cfg-dl") == 0) {
+        sAppCmd = APP_CMD_CONFDATALOG;
+    } else if (strcmp(pCmd, "start-dl") == 0) {
+        sAppCmd = APP_CMD_STARTDATALOG;
+    } else if (strcmp(pCmd, "stop-dl") == 0) {
+        sAppCmd = APP_CMD_STOPDATALOG;
+    } else if (strcmp(pCmd, "erase-dl") == 0) {
+        sAppCmd = APP_CMD_ERASEDATALOG;
     } else if (strcmp(pCmd, "verbose-1") == 0) {
         level = 1;
         sAppCmd = APP_CMD_VERBOSE;
