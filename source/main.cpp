@@ -522,13 +522,13 @@ _AppCmdProcess(char *pCmd)
         sAppCmd = APP_CMD_GETLASTLOC;
     } else if (strcmp(pCmd, "en-geo") == 0) {
         sAppCmd = APP_CMD_ENGEOFENCE;
-    } else if (strcmp(pCmd, "cg-l") == 0) {
+    } else if (strcmp(pCmd, "geo-l") == 0) {
         geofenceId = LecceId;
         sAppCmd = APP_CMD_CONFGEOFENCE;
-    } else if (strcmp(pCmd, "cg-t") == 0) {
+    } else if (strcmp(pCmd, "geo-t") == 0) {
         geofenceId = CataniaId;
         sAppCmd = APP_CMD_CONFGEOFENCE;
-    } else if (strcmp(pCmd, "rg") == 0) {
+    } else if (strcmp(pCmd, "req-geo") == 0) {
         sAppCmd = APP_CMD_GEOFENCEREQ;
     } else if (strcmp(pCmd, "en-odo") == 0) {
         sAppCmd = APP_CMD_ENODO;
