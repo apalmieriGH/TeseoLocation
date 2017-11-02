@@ -60,12 +60,24 @@ __To build an example:__
 2. Update the source tree:
 
 	```
-	mbed update
+	$ mbed update
 	```
 
 3. Run the build:
 
-	```mbed compile -t <ARM | GCC_ARM> -m <YOUR_TARGET>```
+	```
+	$ mbed compile -t <ARM | GCC_ARM> -m <YOUR_TARGET>
+	```
+
+4. Exporting to desktop IDEs
+
+	```
+	$ mbed export -i <UVISION | GCC_ARM | IAR | COIDE> -m <YOUR_TARGET>
+	```
+
+
+	**Note:** Please, refer to [mbed-cli](https://github.com/ARMmbed/mbed-cli) for details about tool guidelines.
+
 
 __To run the application on your board:__
 
