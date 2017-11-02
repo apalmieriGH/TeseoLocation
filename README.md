@@ -40,7 +40,7 @@ The following targets have been tested and work with these examples:
 Building and testing the examples
 ---------------------------------
 
-__To build an example:__
+__To build the example:__
 
 1. Clone the repository containing the example:
 
@@ -93,7 +93,7 @@ In this application, real time GNSS data received by the Teseo-LIV3F device can 
 * Odometer
 * Data Logging
 
-A serial connection should be set up between the Nucleo and the X-NUCLEO-GNSS1A1 boards and the PC with the following parameters:
+1. A serial connection should be set up between the Nucleo and the X-NUCLEO-GNSS1A1 boards and the PC with the following parameters:
 * baud rate: 115200
 * data: 8 bit
 * parity: none
@@ -105,6 +105,14 @@ A serial connection should be set up between the Nucleo and the X-NUCLEO-GNSS1A1
 	
 	**figure 1** Serial connection parameters
 
+2. The user can select among different options to:
+* get in a human readable format information related to the acquired GNSS position (or the satellites in view, the active satellites, and so on)
+* enable feature (geofencing, odometer, data logging)
+* configure a geofence circle
+* require geofence status
+* start/stop feature (odometer, data logging)
 
-
+	![](img/teseo_app.png)
+	
+	**figure 2** TeseoLocation Application menu
 
