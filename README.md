@@ -101,7 +101,7 @@ A serial connection should be set up between the Nucleo and the X-NUCLEO-GNSS1A1
 * flow control: none
 * New-line (Tx/Rx): CR
 
-	![](img/serial_setup.png)
+	![](img/serial_setup.png) ![](img/serial_setup1.png)
 	
 	**figure 1** Serial connection parameters
 
