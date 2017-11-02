@@ -83,6 +83,28 @@ __To run the application on your board:__
 
 1. Connect your mbed board to your computer over USB. It appears as removable storage.
 
-1. When you run the ``mbed compile`` command, as you did above, mbed cli creates a BIN or an HEX file in a ```BUILD/<target-name>/<toolchain>``` directory under the example's directory. Drag and drop the file to the removable storage.
+2. When you run the ``mbed compile`` command, as you did above, mbed cli creates a BIN or an HEX file in a ```BUILD/<target-name>/<toolchain>``` directory under the example's directory. Drag and drop the file to the removable storage.
+
+
+__TeseoLocation application description:__
+
+In this application, real time GNSS data received by the Teseo-LIV3F device can be displayed through a serial connection and a serial terminal on a PC. Furthermore the user can run commands enabling three [advanced features](https://github.com/apalmieriGH/Teseo-LIV3F):
+* Geofencing
+* Odometer
+* Data Logging
+
+A serial connection should be set up between the Nucleo and the X-NUCLEO-GNSS1A1 boards and the PC with the following parameters:
+* baud rate: 115200
+* data: 8 bit
+* parity: none
+* stop: 1bit
+* flow control: none
+* New-line (Tx/Rx): CR
+
+	![](img/serial_setup.png)
+	
+	**figure 1** Serial connection parameters
+
+
 
 
